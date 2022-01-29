@@ -1,0 +1,39 @@
+<html>
+<script>
+function cho_hangul(str) {
+cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+result = "";
+for(i=0;i<str.length;i++) {
+    code = str.charCodeAt(i)-44032;
+    if(code>-1 && code<11172) result += cho[Math.floor(code/588)];
+    else result += str.charAt(i);
+}
+return " - " + result;
+}
+function lp(){
+    //줄 바꿈 문자를 기준으로 textarea 문자열을 분리
+var txtBox = document.getElementById("inputbox");
+var lines = txtBox.value.split("\n");
+
+//내용을 HTML 버전으로 변경
+var resultString  = "<p>";
+for (var i = 0; i < lines.length; i++) {
+resultString +=  lines[i]  +  cho_hangul(lines[i]) + "<br>";
+}
+resultString += "</p>";
+
+//페이지에 출력
+var   blk   = document.getElementById("result");
+blk.innerHTML  =  resultString; 
+}
+</script>
+<body>
+
+<textarea id="inputbox" onchange="lp()">
+나는 사람인가 봇인가 나사봇
+</textarea>
+<a href="javascript:lp();">바꾸기</a>
+
+<div id="result"></div>
+</body>
+</html>
