@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>결혼식 하객 테이블 배치 가늠 페이지</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: #f7f7fb;
+      color: #222;
+    }
+    .wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+    .desc {
+      margin: 0 0 20px;
+      color: #555;
+      line-height: 1.6;
+    }
+    .panel {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      align-items: end;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    input, select, button, textarea {
+      border: 1px solid #d8dbe5;
+      border-radius: 10px;
+      padding: 0 12px;
+      font-size: 15px;
+      background: #fff;
+    }
+    input, select, button {
+      height: 44px;
+    }
+    textarea {
+      min-height: 280px;
+      padding: 12px;
+      resize: vertical;
+      line-height: 1.6;
+      font-family: Consolas, "Malgun Gothic", monospace;
+    }
+    button {
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .btn-primary {
+      background: #7c8cff;
+      color: white;
+      border-color: #7c8cff;
+    }
+    .btn-secondary {
+      background: #f5f6fb;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .card {
+      background: #fafbff;
+      border: 1px solid #eceef6;
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .card .label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .card .value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .section-title h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+    .section-sub {
+      color: #666;
+      font-size: 14px;
+    }
+    .helper {
+      margin-top: 12px;
+      color: #666;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .side-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .side-title h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+    .side-info {
+      font-size: 14px;
+      color: #666;
+    }
+    .tables {
+      display: grid;
+      gap: 16px;
+    }
+    .table-card {
+      background: #fcfcff;
+      border: 1px solid #eceef6;
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .table-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .table-no {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .table-meta {
+      font-size: 13px;
+      color: #666;
+    }
+    .seat-wrap {
+      display: grid;
+      gap: 12px;
+      justify-content: center;
+    }
+    .table-circle {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 3px solid #7c8cff;
+      background: radial-gradient(circle at 30% 30%, #ffffff, #eef1ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .table-seat {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .table-sub {
+      font-size: 13px;
+      color: #555;
+      margin-top: 6px;
+    }
+    .seat-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef1ff;
+      color: #334;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #dfe4ff;
+    }
+    .empty-msg {
+      color: #777;
+      font-size: 14px;
+      padding: 12px 0;
+    }
+    .footer-note {
+      margin-top: 18px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+    }
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>결혼식 하객 테이블 배치 가늠 페이지</h1>
+    <p class="desc">
+      하객을 줄 단위 텍스트로 입력한 뒤 입력 순서대로 우선 배치할 수 있습니다.
+      각 줄은 배치열, 단위명칭, 인원수 형식으로 입력하며, 테이블당 인원과 한 줄에 보일 테이블 개수도 유동적으로 조정할 수 있습니다.
+    </p>
+
+    <div class="panel">
+      <div class="controls">
+        <label>
+          테이블당 인원
+          <select id="seatPerTable">
+            <option value="7">7명</option>
+            <option value="8">8명</option>
+            <option value="9" >9명</option>
+            <option value="10" selected>10명</option>
+          </select>
+        </label>
+
+        <label>
+          한 줄 테이블 수
+          <input type="number" id="tablesPerRow" min="1" max="2" value="2" />
+        </label>
+      </div>
+
+      <div class="summary">
+        <div class="card">
+          <div class="label">전체 하객 수</div>
+          <div class="value" id="totalPeople">0</div>
+        </div>
+        <div class="card">
+          <div class="label">전체 테이블 수</div>
+          <div class="value" id="totalTables">0</div>
+        </div>
+        <div class="card">
+          <div class="label">신랑 하객 수</div>
+          <div class="value" id="leftPeople">0</div>
+        </div>
+        <div class="card">
+          <div class="label">신부 하객 수</div>
+          <div class="value" id="rightPeople">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">
+        <h2>하객 입력</h2>
+        <div class="section-sub" id="groupCountText">0개 그룹</div>
+      </div>
+
+      <label>
+        줄 단위 입력
+        <textarea id="bulkInput"></textarea>
+      </label>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="applyBulkBtn" type="button">입력 반영</button>
+        <button class="btn-secondary" id="sampleTextBtn" type="button">예시 다시 넣기</button>
+        <button class="btn-secondary" id="resetBtn" type="button">초기화</button>
+      </div>
+
+      <div class="helper">
+        한 줄에 하나씩 입력합니다<br>
+        형식은 <strong>신랑 탭 단위명칭 탭 인원수</strong> 또는 <strong>신부 탭 단위명칭 탭 인원수</strong> 입니다<br>
+        탭 대신 쉼표나 여러 칸 공백도 허용합니다<br>
+        우선순위는 입력된 순서대로 자동 적용되며 위에서 아래 순서가 유지됩니다
+      </div>
+
+      <div class="footer-note">
+        예시<br>
+        신랑	고등학교	2<br>
+        신부	친구	10
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="panel">
+        <div class="side-title">
+          <h2>신랑 열</h2>
+          <div class="side-info" id="leftSummaryText"></div>
+        </div>
+        <div class="tables" id="leftTablesWrap"></div>
+      </div>
+
+      <div class="panel">
+        <div class="side-title">
+          <h2>신부 열</h2>
+          <div class="side-info" id="rightSummaryText"></div>
+        </div>
+        <div class="tables" id="rightTablesWrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const seatPerTableEl = document.getElementById('seatPerTable');
+    const tablesPerRowEl = document.getElementById('tablesPerRow');
+    const resetBtn = document.getElementById('resetBtn');
+    const groupCountTextEl = document.getElementById('groupCountText');
+    const bulkInputEl = document.getElementById('bulkInput');
+    const applyBulkBtn = document.getElementById('applyBulkBtn');
+    const sampleTextBtn = document.getElementById('sampleTextBtn');
+
+    const totalPeopleEl = document.getElementById('totalPeople');
+    const totalTablesEl = document.getElementById('totalTables');
+    const leftPeopleEl = document.getElementById('leftPeople');
+    const rightPeopleEl = document.getElementById('rightPeople');
+    const leftSummaryTextEl = document.getElementById('leftSummaryText');
+    const rightSummaryTextEl = document.getElementById('rightSummaryText');
+    const leftTablesWrapEl = document.getElementById('leftTablesWrap');
+    const rightTablesWrapEl = document.getElementById('rightTablesWrap');
+
+    const DEFAULT_SAMPLE = [
+      ['신랑', '친인척 ', '30'],
+      ['신랑', '혼주지인', '20'],
+      ['신랑', '친구', '10'],
+      ['신랑', '전직장', '10'],
+      ['신랑', '아톤', '20'],
+      ['신부', '친인척', '30'],
+      ['신부', '혼주지인', '40'],
+      ['신부', '직장', '20'],
+      ['신부', '친구', '10']
+    ].map(function(row) { return row.join(', '); }).join('\n');
+
+    let groups = [];
+
+    function clampNumber(value, min, max) {
+      const num = Number(value);
+      if (!Number.isFinite(num)) return min;
+      return Math.max(min, Math.min(max, Math.floor(num)));
+    }
+
+    function normalizeSide(value) {
+      const v = String(value).trim().toLowerCase();
+      if (v === '신랑' || v === 'left') return 'left';
+      if (v === '신부' || v === 'right') return 'right';
+      return '';
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function parseBulkInput(text) {
+      const lines = String(text).split(/\r?\n/);
+      const parsed = [];
+      const errors = [];
+
+      lines.forEach(function(rawLine, index) {
+        const line = rawLine.trim();
+        if (!line) return;
+
+        let parts = line.split('\t').map(function(v) { return v.trim(); }).filter(Boolean);
+        if (parts.length < 3) {
+          parts = line.split(',').map(function(v) { return v.trim(); }).filter(Boolean);
+        }
+        if (parts.length < 3) {
+          parts = line.split(/\s{2,}/).map(function(v) { return v.trim(); }).filter(Boolean);
+        }
+
+        if (parts.length < 3) {
+          errors.push((index + 1) + '번째 줄 형식 오류: ' + line);
+          return;
+        }
+
+        const side = normalizeSide(parts[0]);
+        const name = parts[1];
+        const count = clampNumber(parts[2], 0, Number.MAX_SAFE_INTEGER);
+
+        if (!side) {
+          errors.push((index + 1) + '번째 줄 배치열 오류: ' + parts[0]);
+          return;
+        }
+        if (!name) {
+          errors.push((index + 1) + '번째 줄 단위명칭 누락');
+          return;
+        }
+
+        parsed.push({
+          side: side,
+          name: name,
+          count: count,
+          priority: parsed.length + 1
+        });
+      });
+
+      return { parsed: parsed, errors: errors };
+    }
+
+    function applyBulkInput() {
+      const result = parseBulkInput(bulkInputEl.value);
+      if (result.errors.length > 0) {
+        alert('입력 오류가 있습니다\n\n' + result.errors.join('\n'));
+        return;
+      }
+      groups = result.parsed;
+      update();
+    }
+
+    function buildSideTables(side) {
+      const seatPerTable = clampNumber(seatPerTableEl.value, 5, 10);
+      const filtered = groups
+        .filter(function(group) { return group.side === side && group.count > 0; })
+        .sort(function(a, b) { return a.priority - b.priority; });
+
+      const tables = [];
+      let currentTable = null;
+
+      filtered.forEach(function(group) {
+        let remaining = group.count;
+
+        while (remaining > 0) {
+          if (!currentTable || currentTable.filled >= seatPerTable) {
+            currentTable = {
+              tableNo: tables.length + 1,
+              filled: 0,
+              capacity: seatPerTable,
+              allocations: []
+            };
+            tables.push(currentTable);
+          }
+
+          const available = seatPerTable - currentTable.filled;
+          const assigned = Math.min(remaining, available);
+
+          currentTable.allocations.push({
+            name: group.name,
+            count: assigned
+          });
+
+          currentTable.filled += assigned;
+          remaining -= assigned;
+        }
+      });
+
+      return {
+        totalPeople: filtered.reduce(function(sum, group) { return sum + group.count; }, 0),
+        tables: tables
+      };
+    }
+
+    function renderTables(container, data) {
+      const tablesPerRow = clampNumber(tablesPerRowEl.value, 1, 10);
+      container.innerHTML = '';
+      container.style.gridTemplateColumns = 'repeat(' + tablesPerRow + ', minmax(180px, 1fr))';
+
+      if (data.tables.length === 0) {
+        container.innerHTML = '<div class="empty-msg">배치할 인원이 없습니다.</div>';
+        return;
+      }
+
+      data.tables.forEach(function(table) {
+        const card = document.createElement('div');
+        card.className = 'table-card';
+
+        const badges = table.allocations.map(function(item) {
+          return '<span class="badge">' + escapeHtml(item.name) + ' ' + item.count + '명</span>';
+        }).join('');
+
+        card.innerHTML = '' +
+          '<div class="table-head">' +
+            '<div class="table-no">테이블 ' + table.tableNo + '</div>' +
+            '<div class="table-meta">' + table.filled + ' / ' + table.capacity + '명</div>' +
+          '</div>' +
+          '<div class="seat-wrap">' +
+            '<div class="table-circle">' +
+              '<div class="table-seat">' + table.filled + '</div>' +
+              '<div class="table-sub">/ ' + table.capacity + '명</div>' +
+            '</div>' +
+            '<div class="seat-badges">' + badges + '</div>' +
+          '</div>';
+
+        container.appendChild(card);
+      });
+    }
+
+    function update() {
+      const leftData = buildSideTables('left');
+      const rightData = buildSideTables('right');
+
+      renderTables(leftTablesWrapEl, leftData);
+      renderTables(rightTablesWrapEl, rightData);
+
+      const totalPeople = leftData.totalPeople + rightData.totalPeople;
+      const totalTables = leftData.tables.length + rightData.tables.length;
+
+      totalPeopleEl.textContent = totalPeople.toLocaleString();
+      totalTablesEl.textContent = totalTables.toLocaleString();
+      leftPeopleEl.textContent = leftData.totalPeople.toLocaleString();
+      rightPeopleEl.textContent = rightData.totalPeople.toLocaleString();
+      leftSummaryTextEl.textContent = leftData.totalPeople.toLocaleString() + '명 · ' + leftData.tables.length + '테이블';
+      rightSummaryTextEl.textContent = rightData.totalPeople.toLocaleString() + '명 · ' + rightData.tables.length + '테이블';
+      groupCountTextEl.textContent = groups.length + '개 그룹';
+    }
+
+    applyBulkBtn.addEventListener('click', applyBulkInput);
+    sampleTextBtn.addEventListener('click', function() {
+      bulkInputEl.value = DEFAULT_SAMPLE;
+      applyBulkInput();
+    });
+    resetBtn.addEventListener('click', function() {
+      bulkInputEl.value = '';
+      groups = [];
+      update();
+    });
+
+    [seatPerTableEl, tablesPerRowEl].forEach(function(el) {
+      el.addEventListener('input', update);
+      el.addEventListener('change', update);
+    });
+
+    bulkInputEl.value = DEFAULT_SAMPLE;
+    applyBulkInput();
+  </script>
+</body>
+</html>
