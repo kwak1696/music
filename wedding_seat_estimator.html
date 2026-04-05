@@ -238,17 +238,18 @@
     <h1>결혼식 하객 테이블 배치 가늠 페이지</h1>
     <p class="desc">
       하객을 줄 단위 텍스트로 입력한 뒤 입력 순서대로 우선 배치할 수 있습니다.
-      각 줄은 배치열, 단위명칭, 인원수 형식으로 입력하며, 테이블당 인원과 한 줄에 보일 테이블 개수도 유동적으로 조정할 수 있습니다.
+      각 줄은 신랑/신부, 단위명칭, 인원수 형식으로 입력하며, 마지막에 그룹별 테이블당 인원 값을 선택적으로 추가할 수 있습니다.
+      그룹별 값이 없으면 상단 기본값을 사용하고, 있으면 해당 그룹에만 별도 적용합니다.
     </p>
 
     <div class="panel">
       <div class="controls">
         <label>
-          테이블당 인원
+          기본 테이블당 인원
           <select id="seatPerTable">
             <option value="7">7명</option>
             <option value="8">8명</option>
-            <option value="9" >9명</option>
+            <option value="9">9명</option>
             <option value="10" selected>10명</option>
           </select>
         </label>
@@ -298,15 +299,18 @@
 
       <div class="helper">
         한 줄에 하나씩 입력합니다<br>
-        형식은 <strong>신랑 탭 단위명칭 탭 인원수</strong> 또는 <strong>신부 탭 단위명칭 탭 인원수</strong> 입니다<br>
+        형식은 <strong>신랑 탭 단위명칭 탭 인원수</strong> 또는 <strong>신부 탭 단위명칭 탭 인원수 탭 그룹별 테이블당 인원</strong> 입니다<br>
+        마지막 값은 선택 입력이며 7에서 10 사이만 허용합니다<br>
+        마지막 값이 없으면 상단의 기본 테이블당 인원 설정값을 사용합니다<br>
         탭 대신 쉼표나 여러 칸 공백도 허용합니다<br>
         우선순위는 입력된 순서대로 자동 적용되며 위에서 아래 순서가 유지됩니다
       </div>
 
       <div class="footer-note">
         예시<br>
-        신랑	고등학교	2<br>
-        신부	친구	10
+        신랑	친인척	30<br>
+        신부	친구	10<br>
+        신부	혼주지인	40	8
       </div>
     </div>
 
@@ -348,15 +352,20 @@
     const rightTablesWrapEl = document.getElementById('rightTablesWrap');
 
     const DEFAULT_SAMPLE = [
-      ['신랑', '친인척 ', '30'],
-      ['신랑', '혼주지인', '20'],
-      ['신랑', '친구', '10'],
+
+      ['신랑', '혼주석', '6','6'],
+      ['신랑', '친인척', '30'],
+      ['신랑', '부천&성결', '10'],
       ['신랑', '전직장', '10'],
       ['신랑', '아톤', '20'],
+      ['신랑', '혼주지인', '14'],
+      ['신랑', '여분', '8', '8'],
+      ['신부', '혼주석', '6','6'],
       ['신부', '친인척', '30'],
-      ['신부', '혼주지인', '40'],
-      ['신부', '직장', '20'],
-      ['신부', '친구', '10']
+      ['신부', '혼주지인', '25'],
+      ['신부', '친구', '10'],
+      ['신부', '직장', '19'],
+      ['신부', '여분', '8', '8'],
     ].map(function(row) { return row.join(', '); }).join('\n');
 
     let groups = [];
@@ -404,10 +413,16 @@
           errors.push((index + 1) + '번째 줄 형식 오류: ' + line);
           return;
         }
+        if (parts.length > 4) {
+          errors.push((index + 1) + '번째 줄 값이 너무 많습니다: ' + line);
+          return;
+        }
 
         const side = normalizeSide(parts[0]);
         const name = parts[1];
         const count = clampNumber(parts[2], 0, Number.MAX_SAFE_INTEGER);
+        const customSeatPerTableRaw = parts.length === 4 ? parts[3] : '';
+        let customSeatPerTable = null;
 
         if (!side) {
           errors.push((index + 1) + '번째 줄 배치열 오류: ' + parts[0]);
@@ -417,11 +432,20 @@
           errors.push((index + 1) + '번째 줄 단위명칭 누락');
           return;
         }
+        if (parts.length === 4) {
+          const num = Number(customSeatPerTableRaw);
+          if (!Number.isFinite(num) || Math.floor(num) < 6 || Math.floor(num) > 10) {
+            errors.push((index + 1) + '번째 줄 그룹별 테이블당 인원은 7~10만 허용됩니다: ' + customSeatPerTableRaw);
+            return;
+          }
+          customSeatPerTable = Math.floor(num);
+        }
 
         parsed.push({
           side: side,
           name: name,
           count: count,
+          customSeatPerTable: customSeatPerTable,
           priority: parsed.length + 1
         });
       });
@@ -440,7 +464,7 @@
     }
 
     function buildSideTables(side) {
-      const seatPerTable = clampNumber(seatPerTableEl.value, 5, 10);
+      const defaultSeatPerTable = clampNumber(seatPerTableEl.value, 7, 10);
       const filtered = groups
         .filter(function(group) { return group.side === side && group.count > 0; })
         .sort(function(a, b) { return a.priority - b.priority; });
@@ -449,34 +473,47 @@
       let currentTable = null;
 
       filtered.forEach(function(group) {
+
+
         let remaining = group.count;
+        const groupSeatLimit = group.customSeatPerTable || defaultSeatPerTable;
 
         while (remaining > 0) {
-          if (!currentTable || currentTable.filled >= seatPerTable) {
+          const needsNewTable = !currentTable || currentTable.filled >= currentTable.capacity || currentTable.capacity !== groupSeatLimit;
+
+          if (needsNewTable) {
             currentTable = {
               tableNo: tables.length + 1,
               filled: 0,
-              capacity: seatPerTable,
+              capacity: groupSeatLimit,
               allocations: []
             };
             tables.push(currentTable);
           }
 
-          const available = seatPerTable - currentTable.filled;
+          const available = currentTable.capacity - currentTable.filled;
           const assigned = Math.min(remaining, available);
 
           currentTable.allocations.push({
             name: group.name,
-            count: assigned
+            count: assigned,
+            customSeatPerTable: group.customSeatPerTable
           });
 
           currentTable.filled += assigned;
           remaining -= assigned;
+
+          if (currentTable.filled >= currentTable.capacity) {
+            currentTable = null;
+          }
         }
       });
 
       return {
-        totalPeople: filtered.reduce(function(sum, group) { return sum + group.count; }, 0),
+        totalPeople: filtered
+          .filter(function(group) { return group.name !== '혼주석'; })
+          .filter(function(group) { return group.name !== '여분'; })
+          .reduce(function(sum, group) { return sum + group.count; }, 0),
         tables: tables
       };
     }
@@ -496,7 +533,8 @@
         card.className = 'table-card';
 
         const badges = table.allocations.map(function(item) {
-          return '<span class="badge">' + escapeHtml(item.name) + ' ' + item.count + '명</span>';
+          const extra = item.customSeatPerTable ? ' · 그룹기준 ' + item.customSeatPerTable + '명' : '';
+          return '<span class="badge">' + escapeHtml(item.name) + ' ' + item.count + '명' + extra + '</span>';
         }).join('');
 
         card.innerHTML = '' +
@@ -520,6 +558,19 @@
       const leftData = buildSideTables('left');
       const rightData = buildSideTables('right');
 
+      const leftHonju = groups
+        .filter(function(g) { return g.side === 'left' && g.name === '혼주석'; })
+        .reduce(function(sum, g) { return sum + g.count; }, 0);
+      const leftBuffer = groups
+        .filter(function(g) { return g.side === 'left' && g.name === '여분'; })
+        .reduce(function(sum, g) { return sum + g.count; }, 0);
+      const rightHonju = groups
+        .filter(function(g) { return g.side === 'right' && g.name === '혼주석'; })
+        .reduce(function(sum, g) { return sum + g.count; }, 0);
+      const rightBuffer = groups
+        .filter(function(g) { return g.side === 'right' && g.name === '여분'; })
+        .reduce(function(sum, g) { return sum + g.count; }, 0);
+
       renderTables(leftTablesWrapEl, leftData);
       renderTables(rightTablesWrapEl, rightData);
 
@@ -528,8 +579,8 @@
 
       totalPeopleEl.textContent = totalPeople.toLocaleString();
       totalTablesEl.textContent = totalTables.toLocaleString();
-      leftPeopleEl.textContent = leftData.totalPeople.toLocaleString();
-      rightPeopleEl.textContent = rightData.totalPeople.toLocaleString();
+      leftPeopleEl.textContent = leftData.totalPeople.toLocaleString() + ' (혼주 ' + leftHonju + ', 여분 ' +leftBuffer + ' 제외)';
+      rightPeopleEl.textContent = rightData.totalPeople.toLocaleString() + ' (혼주 ' + rightHonju + ', 여분 ' +rightBuffer + ' 제외)';
       leftSummaryTextEl.textContent = leftData.totalPeople.toLocaleString() + '명 · ' + leftData.tables.length + '테이블';
       rightSummaryTextEl.textContent = rightData.totalPeople.toLocaleString() + '명 · ' + rightData.tables.length + '테이블';
       groupCountTextEl.textContent = groups.length + '개 그룹';
